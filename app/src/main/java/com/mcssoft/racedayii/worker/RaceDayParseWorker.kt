@@ -34,7 +34,7 @@ class RaceDayParseWorker (private val context: Context, private val params: Work
 
             // Initialise parser.
             raceDayParser = RaceDayParser(context)
-            raceDayParser.setInputStream(File(path, name))
+            raceDayParser.setInputStream(File(path, name!!))
 
             // Get the list of meetings.
             meetingsListing = raceDayParser.parseForMeeting()
@@ -74,6 +74,5 @@ class RaceDayParseWorker (private val context: Context, private val params: Work
             Result.failure()
         }
     }
-
 
 }

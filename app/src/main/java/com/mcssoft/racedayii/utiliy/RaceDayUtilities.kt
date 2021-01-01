@@ -8,6 +8,9 @@ import java.io.File
 import java.util.*
 import javax.inject.Inject
 
+/**
+ * General "utility" class fro Date/Time and file system related functions.
+ */
 class RaceDayUtilities @Inject constructor(private val context: Context) {
 
     //<editor-fold default state="collapsed" desc="Region: Date/Time">

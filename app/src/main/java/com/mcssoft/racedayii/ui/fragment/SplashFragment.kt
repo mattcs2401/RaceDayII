@@ -11,15 +11,15 @@ import androidx.navigation.Navigation
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.mcssoft.racedayii.utiliy.Constants.DOWNLOAD_RESULT_FAILURE
-import com.mcssoft.racedayii.utiliy.Constants.DOWNLOAD_RESULT_SUCCESS
-import com.mcssoft.racedayii.utiliy.Constants.PARSE_RESULT_FAILURE
-import com.mcssoft.racedayii.utiliy.Constants.PARSE_RESULT_SUCCESS
 import com.mcssoft.racedayii.R
 import com.mcssoft.racedayii.databinding.SplashFragmentBinding
 import com.mcssoft.racedayii.events.EventResultMessage
 import com.mcssoft.racedayii.repository.RaceDayPreferences
 import com.mcssoft.racedayii.repository.RaceDayRepository
+import com.mcssoft.racedayii.utiliy.Constants.DOWNLOAD_RESULT_FAILURE
+import com.mcssoft.racedayii.utiliy.Constants.DOWNLOAD_RESULT_SUCCESS
+import com.mcssoft.racedayii.utiliy.Constants.PARSE_RESULT_FAILURE
+import com.mcssoft.racedayii.utiliy.Constants.PARSE_RESULT_SUCCESS
 import com.mcssoft.racedayii.utiliy.RaceDayUtilities
 import com.mcssoft.racedayii.worker.RaceDayDownloadWorker
 import com.mcssoft.racedayii.worker.RaceDayParseWorker
@@ -37,6 +37,7 @@ class SplashFragment : Fragment() {
     @Inject lateinit var raceDayPreferences: RaceDayPreferences
     @Inject lateinit var raceDayRepository: RaceDayRepository
 
+    //<editor-fold default state="collapsed" desc="Region: Lifecycle">
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View {
         Log.d("TAG", "SplashFragment.onCreateView")
@@ -63,8 +64,12 @@ class SplashFragment : Fragment() {
 
         EventBus.getDefault().unregister(this)
     }
+    //</editor-fold>
 
-
+    //<editor-fold default state="collapsed" desc="Region: Utility">
+    /**
+     * Perform some preferences and file system checks and decide on the "start" type.
+     */
     private fun initialise() {
         val path = raceDayUtilities.getPrimaryStoragePath()
 
@@ -78,11 +83,11 @@ class SplashFragment : Fragment() {
 
                 } else {
                     // Either the file doesn't exist, or the file exists, but is not today.
-                    defaultStart(path)
+                    cleanStart()
                 }
             } else {
                 // The use file preference is not set.
-                defaultStart(path)
+                cleanStart()
             }
         } else {
             binding.idTvProgress.text = requireContext().getString(R.string.no_storage)
@@ -90,6 +95,10 @@ class SplashFragment : Fragment() {
         }
     }
 
+    /**
+     * Act as a communication hub for the results of file download and parsing the xml.
+     * @param event: An object that represents the result of an event.
+     */
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onMessageEvent(event: EventResultMessage) {
         when(event.result) {
@@ -114,6 +123,9 @@ class SplashFragment : Fragment() {
         }
     }
 
+    /**
+     * Perform a re-start (just recreate the cache).
+     */
     private fun reStart() {
         Log.d("TAG", "SplashFragment: Restart")
 
@@ -125,10 +137,14 @@ class SplashFragment : Fragment() {
         navigateToMain()
     }
 
-    private fun defaultStart(path: String) {
+    /**
+     * Perform a "clean" start (basically delete everything and recreate).
+     */
+    private fun cleanStart() {
         Log.d("TAG", "SplashFragment: Default start")
 
         // Delete whatever file is there.
+        val path = raceDayUtilities.getPrimaryStoragePath()
         raceDayUtilities.deleteFromStorage(File(path))
 
         // Clear cache and underlying data. Is recreated on successful download processing.
@@ -138,11 +154,17 @@ class SplashFragment : Fragment() {
         runDownloadWorker()
     }
 
+    /**
+     * Enqueue the CoroutineWorker that performs the file download.
+     */
     private fun runDownloadWorker() {
         val raceDayDownloadWorker = OneTimeWorkRequestBuilder<RaceDayDownloadWorker>().build()
         WorkManager.getInstance(requireContext()).enqueue(raceDayDownloadWorker)
     }
 
+    /**
+     * Enqueue the CoroutineWorker that performs the file xml parse.
+     */
     private fun runParserWorker() {
         val keyPath = requireContext().getString(R.string.key_file_path)
         val filePath = raceDayUtilities.getPrimaryStoragePath()
@@ -157,11 +179,15 @@ class SplashFragment : Fragment() {
         WorkManager.getInstance(requireContext()).enqueue(raceDayParseWorker)
     }
 
+    /**
+     * Programmatic navigation to MainFragment.
+     */
     private fun navigateToMain() {
         // Navigate to MainFragment.
         Navigation.findNavController(requireActivity(), R.id.id_nav_host_fragment)
             .navigate(R.id.action_splashFragment_to_mainFragment)
     }
+    //</editor-fold>
 
     private lateinit var binding: SplashFragmentBinding
 }
