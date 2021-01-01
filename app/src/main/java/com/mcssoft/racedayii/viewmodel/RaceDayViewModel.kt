@@ -7,6 +7,9 @@ import dagger.hilt.android.scopes.ActivityScoped
 
 @ActivityScoped
 class RaceDayViewModel @ViewModelInject constructor(private var repository: RaceDayRepository) : ViewModel() {
+    fun clearCache() {
+        TODO("Not yet implemented")
+    }
 
     //    val meetings: LiveData<List<RaceMeeting>>?
 //        get() = repository.getRaceDayCache()
